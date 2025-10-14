@@ -2,99 +2,227 @@
 
 namespace App\Services;
 
-use App\Models\User;
-use Illuminate\Support\Facades\Log;
+use App\Libraries\Bnienc;
 use Illuminate\Support\Facades\Http;
-use App\Libraries\Bnienc; // Pastikan path library ini benar
-use Illuminate\Http\Client\ConnectionException;
+use Illuminate\Support\Facades\Log;
+use Exception;
 
 class BNIApiService
 {
-    protected $client_id;
-    protected $secret_key;
-    protected $url;
-    public $datetime_expired;
-    protected $bnienc;
+    protected $clientId;
+    protected $secretKey;
+    protected $apiUrl;
+    protected $vaPrefix;
 
     public function __construct()
     {
-        // Ambil konfigurasi dari config/services.php
-        $this->client_id = config('services.bni.client_id');
-        $this->secret_key = config('services.bni.secret_key');
-        $this->url = config('services.bni.url');
+        $this->clientId = env('BNI_CLIENT_ID');
+        $this->secretKey = env('BNI_SECRET_KEY');
+        $this->vaPrefix = env('BNI_VA_PREFIX', ''); // Prefix VA jika ada
         
-        $this->datetime_expired = date('Y-m-d H:i:s', strtotime('+24 hours')); // Contoh: expired dalam 24 jam
+        // Pastikan URL diakhiri dengan /
+        $this->apiUrl = rtrim(env('BNI_API_URL', 'https://api.bni-ecollection.com/'), '/') . '/';
 
-        // Inisialisasi Bnienc
-        $this->bnienc = new Bnienc();
+        if (empty($this->clientId) || empty($this->secretKey)) {
+            Log::critical('❌ BNI_CLIENT_ID atau BNI_SECRET_KEY belum diatur di file .env');
+        }
     }
 
-    public function createBilling(User $user, int $amount): ?array
+    public function createBilling($user, $amount, $retryCount = 0)
     {
-        // Pastikan client_id dan secret_key tidak kosong
-        if (empty($this->client_id) || empty($this->secret_key)) {
-            Log::error('❌ Konfigurasi BNI (Client ID / Secret Key) tidak ditemukan.');
+        if (empty($this->clientId) || empty($this->secretKey)) {
+            Log::error('❌ Kredensial BNI tidak lengkap');
             return null;
         }
 
-        // Generate virtual account unik
-        $vaNumber = '988' . $this->client_id . str_pad($user->id, 6, '0', STR_PAD_LEFT);
-
-        // trx_id unik
-        $trxId = 'PMB-' . $user->id . '-' . substr(md5(uniqid(rand(), true)), 0, 5);
-
-        $payloadData = [
-            'type'             => 'createBilling',
-            'client_id'        => $this->client_id,
-            'trx_id'           => $trxId,
-            'trx_amount'       => $amount,
-            'billing_type'     => 'c',
-            'customer_name'    => preg_replace('/[^a-zA-Z0-9\s]/', '', $user->name), // Hapus karakter non-alfanumerik
-            'customer_email'   => $user->email,
-            'customer_phone'   => $user->phone,
-            'virtual_account'  => $vaNumber,
-            'datetime_expired' => $this->datetime_expired,
-        ];
-
-        Log::info('📤 Mengirim request ke BNI', ['url' => $this->url, 'payload' => $payloadData]);
-
-        // Encrypt payload
-        $hashedString = $this->bnienc->encrypt($payloadData, $this->client_id, $this->secret_key);
-        $requestPayload = [
-            'client_id' => $this->client_id,
-            'data' => $hashedString,
-        ];
+        if ($retryCount >= 2) {
+            Log::error('❌ Max retry tercapai untuk createBilling', ['user_id' => $user->id]);
+            return null;
+        }
 
         try {
-            $response = Http::timeout(15)->post($this->url, $requestPayload);
-        } catch (ConnectionException $e) {
-            Log::error('❌ Gagal koneksi ke BNI', ['exception' => $e->getMessage()]);
-            return null;
-        } catch (\Exception $e) {
-            Log::error('❌ Gagal request ke BNI', ['exception' => $e->getMessage()]);
+            $trxId = 'PMB' . now()->format('YmdHis') . $user->id;
+        
+            // Validasi dan format phone
+            $phone = preg_replace('/\D/', '', $user->phone);
+            if (strlen($phone) < 10 || strlen($phone) > 13) {
+                Log::warning('⚠️ Nomor phone invalid', ['phone' => $user->phone, 'user_id' => $user->id]);
+                // Tetap lanjutkan dengan nomor apa adanya, BNI mungkin bisa handle
+                $customerPhone = $phone; 
+            } else {
+                if (substr($phone, 0, 2) === '62') {
+                    $customerPhone = '0' . substr($phone, 2);
+                } elseif (substr($phone, 0, 1) !== '0') {
+                    $customerPhone = '0' . $phone;
+                } else {
+                    $customerPhone = $phone;
+                }
+            }
+
+            // Sanitasi nama - maksimal 50 karakter
+            $sanitizedName = preg_replace('/[^a-zA-Z0-9\s]/', '', trim($user->name));
+            $sanitizedName = substr($sanitizedName, 0, 50);
+            if (empty($sanitizedName)) {
+                Log::warning('⚠️ Nama pelanggan kosong setelah sanitasi', ['original' => $user->name]);
+                return null; // Nama wajib diisi
+            }
+
+            // Format datetime sesuai dokumentasi BNI (WIB)
+            $datetimeExpired = now()->addDay()->timezone('Asia/Jakarta')->format('Y-m-d H:i:s');
+
+            // Generate VA number (open VA jika prefix kosong)
+            $virtualAccount = '';
+            if (!empty($this->vaPrefix)) {
+                $uniqueNumber = str_pad($user->id, 10, '0', STR_PAD_LEFT);
+                $virtualAccount = $this->vaPrefix . $uniqueNumber;
+            }
+
+            // =================================================================
+            // PERUBAHAN UTAMA: Menggunakan data dinamis, bukan hardcode
+            // =================================================================
+            $payload = [
+                'type'             => 'createBilling',
+                'client_id'        => $this->clientId,
+                'trx_id'           => $trxId,
+                'trx_amount'       => $amount,
+                'billing_type'     => 'c', // c: create, u: update, d: delete
+                'datetime_expired' => $datetimeExpired,
+                'virtual_account'  => $virtualAccount,
+                'customer_name'    => $sanitizedName,
+                'customer_email'   => $user->email,
+                'customer_phone'   => $customerPhone,
+            ];
+
+            $encryptedPayload = Bnienc::encrypt($payload, $this->clientId, $this->secretKey);
+
+            $requestBody = [
+                'client_id' => $this->clientId,
+                'data'      => $encryptedPayload,
+            ];
+            
+            Log::info('📤 Mengirim request ke BNI', ['payload' => $payload]);
+
+            // =================================================================
+            // DIRAPIKAN: Menggunakan Laravel HTTP Client secara konsisten
+            // =================================================================
+            $response = Http::timeout(45)
+                ->withHeaders([
+                    'Content-Type' => 'application/json',
+                    'Accept'       => 'application/json',
+                ])
+                ->post($this->apiUrl, $requestBody); // Kirim array, Laravel otomatis encode ke JSON
+
+            $statusCode = $response->status();
+            $rawBody = $response->body();
+            
+            Log::info('📥 Respons mentah BNI', [
+                'status_code' => $statusCode,
+                'body'        => $rawBody,
+            ]);
+
+            if (!$response->successful()) { // Cek status 2xx
+                Log::error('❌ HTTP Error dari BNI', ['status' => $statusCode, 'body' => $rawBody]);
+                return null;
+            }
+
+            $result = $response->json(); // Decode JSON
+
+            if (empty($result) || !is_array($result)) {
+                Log::error('❌ Respons BNI bukan JSON valid', ['raw' => $rawBody]);
+                return null;
+            }
+            
+            // Cek status dari BNI
+            $status = $result['status'] ?? 'unknown';
+            if ($status !== '000') {
+                // Log error spesifik dari BNI
+                Log::error('❌ Gagal membuat VA di BNI', [
+                    'status'   => $status,
+                    'message'  => $result['message'] ?? 'no message',
+                    'response' => $result,
+                    'trx_id'   => $trxId,
+                ]);
+                return null; // Langsung hentikan jika gagal
+            }
+
+            // Decrypt response data jika sukses
+            $decrypted = !empty($result['data'])
+                ? Bnienc::decrypt($result['data'], $this->clientId, $this->secretKey)
+                : null;
+
+            Log::info('🔓 Hasil dekripsi BNI', ['decrypted_data' => $decrypted]);
+
+            $vaNumber = $decrypted['virtual_account'] ?? null;
+
+            if (empty($vaNumber)) {
+                Log::warning('⚠️ VA tidak ditemukan dalam response BNI', [
+                    'user_id' => $user->id,
+                    'decrypted' => $decrypted
+                ]);
+                return null;
+            }
+
+            Log::info('✅ VA berhasil dibuat', [
+                'user_id' => $user->id,
+                'va_number' => $vaNumber
+            ]);
+
+            return [
+                'status'           => true,
+                'virtual_account'  => $vaNumber,
+                'trx_id'           => $decrypted['trx_id'] ?? $trxId,
+                'datetime_expired' => $datetimeExpired,
+            ];
+
+        } catch (Exception $e) {
+            Log::error('💥 Exception saat createBilling', [
+                'message' => $e->getMessage(),
+                'trace'   => $e->getTraceAsString(),
+                'user_id' => $user->id
+            ]);
             return null;
         }
+    }
 
-        $responseJson = $response->json();
-        Log::info('📥 Respons dari BNI', $responseJson);
+    public function inquiryBilling($trxId)
+    {
+        // ... (method inquiryBilling Anda sudah cukup baik, cukup hapus dd() jika ada)
+        try {
+            $payload = [
+                'type' => 'inquirybilling',
+                'client_id' => $this->clientId,
+                'trx_id' => $trxId,
+            ];
 
-        if (!isset($responseJson['status']) || $responseJson['status'] !== '000') {
-            Log::error('❌ Status dari BNI bukan 000', $responseJson);
+            $encryptedPayload = Bnienc::encrypt($payload, $this->clientId, $this->secretKey);
+            
+            $requestBody = [
+                'client_id' => $this->clientId,
+                'data' => $encryptedPayload,
+            ];
+
+            $response = Http::timeout(30)->post($this->apiUrl, $requestBody);
+            
+            if (!$response->successful()) {
+                Log::error('Inquiry Gagal (HTTP Error)', ['status' => $response->status(), 'trx_id' => $trxId]);
+                return null;
+            }
+
+            $result = $response->json();
+            
+            if (($result['status'] ?? '') !== '000') {
+                Log::warning('Inquiry Gagal (BNI Status)', ['response' => $result, 'trx_id' => $trxId]);
+                return null;
+            }
+
+            return Bnienc::decrypt($result['data'], $this->clientId, $this->secretKey);
+
+        } catch (Exception $e) {
+            Log::error('💥 Exception di inquiryBilling', [
+                'message' => $e->getMessage(),
+                'trx_id' => $trxId
+            ]);
             return null;
         }
-
-        $decryptedData = $this->bnienc->decrypt($responseJson['data'], $this->client_id, $this->secret_key);
-
-        if (!$decryptedData) {
-            Log::error('❌ Gagal dekripsi data dari BNI.');
-            return null;
-        }
-
-        // Tambahkan info VA kembali untuk disimpan di database
-        $decryptedData['virtual_account'] = $vaNumber;
-        $decryptedData['trx_amount'] = $amount;
-        $decryptedData['datetime_expired'] = $this->datetime_expired;
-
-        return $decryptedData;
     }
 }
