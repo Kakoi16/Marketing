@@ -19,7 +19,7 @@ class BNIApiService
         $this->clientId = env('BNI_CLIENT_ID');
         $this->secretKey = env('BNI_SECRET_KEY');
         $this->vaPrefix = env('BNI_VA_PREFIX', ''); // Prefix VA jika ada
-        
+
         // Pastikan URL diakhiri dengan /
         $this->apiUrl = rtrim(env('BNI_API_URL', 'https://api.bni-ecollection.com/'), '/') . '/';
 
@@ -42,13 +42,13 @@ class BNIApiService
 
         try {
             $trxId = 'PMB' . now()->format('YmdHis') . $user->id;
-        
+
             // Validasi dan format phone
             $phone = preg_replace('/\D/', '', $user->phone);
             if (strlen($phone) < 10 || strlen($phone) > 13) {
                 Log::warning('⚠️ Nomor phone invalid', ['phone' => $user->phone, 'user_id' => $user->id]);
                 // Tetap lanjutkan dengan nomor apa adanya, BNI mungkin bisa handle
-                $customerPhone = $phone; 
+                $customerPhone = $phone;
             } else {
                 if (substr($phone, 0, 2) === '62') {
                     $customerPhone = '0' . substr($phone, 2);
@@ -71,11 +71,10 @@ class BNIApiService
             $datetimeExpired = now()->addDay()->timezone('Asia/Jakarta')->format('Y-m-d H:i:s');
 
             // Generate VA number (open VA jika prefix kosong)
-            $virtualAccount = '';
-            if (!empty($this->vaPrefix)) {
-                $uniqueNumber = str_pad($user->id, 10, '0', STR_PAD_LEFT);
-                $virtualAccount = $this->vaPrefix . $uniqueNumber;
-            }
+            $vaPrefixUtama = '98841625';  // kode tetap
+            $vaKodeUrut = '2600';         // ubah dari 2510 ke 2600
+            $vaAkhir = str_pad($user->id, 4, '0', STR_PAD_LEFT); // urutan 0001, 0002, dst
+            $virtualAccount = $vaPrefixUtama . $vaKodeUrut . $vaAkhir;
 
             // =================================================================
             // PERUBAHAN UTAMA: Menggunakan data dinamis, bukan hardcode
@@ -99,7 +98,7 @@ class BNIApiService
                 'client_id' => $this->clientId,
                 'data'      => $encryptedPayload,
             ];
-            
+
             Log::info('📤 Mengirim request ke BNI', ['payload' => $payload]);
 
             // =================================================================
@@ -114,7 +113,7 @@ class BNIApiService
 
             $statusCode = $response->status();
             $rawBody = $response->body();
-            
+
             Log::info('📥 Respons mentah BNI', [
                 'status_code' => $statusCode,
                 'body'        => $rawBody,
@@ -131,7 +130,7 @@ class BNIApiService
                 Log::error('❌ Respons BNI bukan JSON valid', ['raw' => $rawBody]);
                 return null;
             }
-            
+
             // Cek status dari BNI
             $status = $result['status'] ?? 'unknown';
             if ($status !== '000') {
@@ -173,7 +172,6 @@ class BNIApiService
                 'trx_id'           => $decrypted['trx_id'] ?? $trxId,
                 'datetime_expired' => $datetimeExpired,
             ];
-
         } catch (Exception $e) {
             Log::error('💥 Exception saat createBilling', [
                 'message' => $e->getMessage(),
@@ -195,28 +193,27 @@ class BNIApiService
             ];
 
             $encryptedPayload = Bnienc::encrypt($payload, $this->clientId, $this->secretKey);
-            
+
             $requestBody = [
                 'client_id' => $this->clientId,
                 'data' => $encryptedPayload,
             ];
 
             $response = Http::timeout(30)->post($this->apiUrl, $requestBody);
-            
+
             if (!$response->successful()) {
                 Log::error('Inquiry Gagal (HTTP Error)', ['status' => $response->status(), 'trx_id' => $trxId]);
                 return null;
             }
 
             $result = $response->json();
-            
+
             if (($result['status'] ?? '') !== '000') {
                 Log::warning('Inquiry Gagal (BNI Status)', ['response' => $result, 'trx_id' => $trxId]);
                 return null;
             }
 
             return Bnienc::decrypt($result['data'], $this->clientId, $this->secretKey);
-
         } catch (Exception $e) {
             Log::error('💥 Exception di inquiryBilling', [
                 'message' => $e->getMessage(),

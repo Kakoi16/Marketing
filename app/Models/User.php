@@ -23,6 +23,10 @@ protected $fillable = [
     'password',
     'phone',
     'role',
+    'va_number',
+    'va_amount',
+    'va_expired_at',
+    'va_status',
 ];
 
 

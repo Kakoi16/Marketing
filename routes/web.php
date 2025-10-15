@@ -14,6 +14,7 @@ use App\Http\Controllers\Mahasiswa\RegisterStepController;
 use App\Http\Controllers\Mahasiswa\BiodataController;
 use App\Http\Controllers\Mahasiswa\PostRegisterController;
 use App\Http\Controllers\Pdf\OCRController;
+use App\Http\Controllers\Mahasiswa\VirtualAccountController;
 
 /*
 |--------------------------------------------------------------------------
@@ -57,11 +58,18 @@ Route::prefix('mahasiswa')->name('mahasiswa.')->group(function () {
     Route::post('/validate', [RegisterStepController::class, 'validateFiles'])->name('validate');
     Route::post('/save-ocr', [RegisterStepController::class, 'saveCorrections'])->name('ocr.save');
     Route::get('/post-register', [PostRegisterController::class, 'index'])->name('post.register');
-    
     // Rute privat (memerlukan login)
     Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/dashboard', [MahasiswaDashboardController::class, 'index'])->name('dashboard');
         Route::get('/biodata', [BiodataController::class, 'create'])->name('biodata.create');
+    });
+    Route::middleware(['auth', 'verified'])->group(function () {
+        Route::get('/dashboard', [MahasiswaDashboardController::class, 'index'])->name('dashboard');
+        Route::get('/biodata', [BiodataController::class, 'create'])->name('biodata.create');
+        
+        // PINDAHKAN KE SINI DAN PERBAIKI URL-NYA
+        Route::get('/virtual-account', [VirtualAccountController::class, 'dashboard'])
+             ->name('va.dashboard');
     });
 });
 
@@ -73,12 +81,6 @@ Route::prefix('ocr')->name('ocr.')->group(function () {
     Route::post('/save', [OCRController::class, 'save'])->name('save');
 });
 
-
-// Rute Reset VA
-Route::post('/reset', function() {
-    Auth::user()->update(['va_number' => null, 'va_expired_at' => null]);
-    return redirect()->back()->with('success', 'Virtual Account berhasil direset.');
-})->middleware('auth')->name('reset');
 
 
 // === RUTE PROFIL BAWAAN LARAVEL YANG HILANG ===
