@@ -8,6 +8,7 @@ use App\Http\Controllers\Admin\PromoCodeController;
 use App\Http\Controllers\Admin\CalendarController;
 // Import semua controller yang dibutuhkan
 use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
+use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\ProfileController as AdminProfileController;
 use App\Http\Controllers\Mahasiswa\DashboardController as MahasiswaDashboardController;
 use App\Http\Controllers\Mahasiswa\RegisterStepController;
@@ -26,7 +27,7 @@ use App\Http\Controllers\Mahasiswa\VirtualAccountController;
 Route::get('/', fn() => view('welcome'));
 Route::get('/dashboard', fn() => view('dashboard'))->middleware(['auth', 'verified'])->name('dashboard');
 Route::get('/post-register', [PostRegisterController::class, 'index'])->name('post-register');
-
+Route::get('/dashboard/chart-data', [DashboardController::class, 'chartData'])->name('dashboard.chartData');
 
 // === GRUP RUTE ADMIN ===
 Route::middleware(['auth', 'verified'])->prefix('admin')->name('admin.')->group(function () {

@@ -119,18 +119,18 @@
                                 <h4 class="font-bold text-gray-700 mb-3">Petunjuk Pembayaran</h4>
 
                                 <div class="mb-4 border-b border-gray-200">
-                       <nav 
-    class="-mb-px flex space-x-4 overflow-x-auto pb-3
+                                    <nav
+                                        class="-mb-px flex space-x-4 overflow-x-auto pb-3
            [&::-webkit-scrollbar]:h-1.5
            [&::-webkit-scrollbar-track]:bg-teal-50
            [&::-webkit-scrollbar-thumb]:bg-bni-teal [&::-webkit-scrollbar-thumb]:rounded-full"
-    aria-label="Tabs">
-    
-    <button @click="activeTab = 'mobile'" :class="{ 'border-bni-teal text-bni-teal': activeTab === 'mobile', 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300': activeTab !== 'mobile' }" class="whitespace-nowrap py-3 px-1 border-b-2 font-semibold text-sm focus:outline-none">Mobile Banking</button>
-    <button @click="activeTab = 'atm'" :class="{ 'border-bni-teal text-bni-teal': activeTab === 'atm', 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300': activeTab !== 'atm' }" class="whitespace-nowrap py-3 px-1 border-b-2 font-semibold text-sm focus:outline-none">ATM BNI</button>
-    <button @click="activeTab = 'ibanking'" :class="{ 'border-bni-teal text-bni-teal': activeTab === 'ibanking', 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300': activeTab !== 'ibanking' }" class="whitespace-nowrap py-3 px-1 border-b-2 font-semibold text-sm focus:outline-none">Internet Banking</button>
-    <button @click="activeTab = 'other'" :class="{ 'border-bni-teal text-bni-teal': activeTab === 'other', 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300': activeTab !== 'other' }" class="whitespace-nowrap py-3 px-1 border-b-2 font-semibold text-sm focus:outline-none">Bank Lain</button>
-</nav>
+                                        aria-label="Tabs">
+
+                                        <button @click="activeTab = 'mobile'" :class="{ 'border-bni-teal text-bni-teal': activeTab === 'mobile', 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300': activeTab !== 'mobile' }" class="whitespace-nowrap py-3 px-1 border-b-2 font-semibold text-sm focus:outline-none">Mobile Banking</button>
+                                        <button @click="activeTab = 'atm'" :class="{ 'border-bni-teal text-bni-teal': activeTab === 'atm', 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300': activeTab !== 'atm' }" class="whitespace-nowrap py-3 px-1 border-b-2 font-semibold text-sm focus:outline-none">ATM BNI</button>
+                                        <button @click="activeTab = 'ibanking'" :class="{ 'border-bni-teal text-bni-teal': activeTab === 'ibanking', 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300': activeTab !== 'ibanking' }" class="whitespace-nowrap py-3 px-1 border-b-2 font-semibold text-sm focus:outline-none">Internet Banking</button>
+                                        <button @click="activeTab = 'other'" :class="{ 'border-bni-teal text-bni-teal': activeTab === 'other', 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300': activeTab !== 'other' }" class="whitespace-nowrap py-3 px-1 border-b-2 font-semibold text-sm focus:outline-none">Bank Lain</button>
+                                    </nav>
                                 </div>
 
                                 <div class="text-sm text-gray-600 space-y-2 leading-relaxed">

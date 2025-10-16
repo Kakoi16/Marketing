@@ -20,26 +20,27 @@
                     </svg>
                   </div>
 
-                  <div class="mt-5 flex items-end justify-between">
-                    <div>
-                      <span class="text-sm text-gray-500 dark:text-gray-400">Customers</span>
-                      <h4 class="mt-2 text-title-sm font-bold text-gray-800 dark:text-white/90">
-                        3,782
-                      </h4>
-                    </div>
+<div class="mt-5 flex items-end justify-between">
+    <div>
+        <span class="text-sm text-gray-500 dark:text-gray-400">Mahasiswa yang daftar saja</span>
+        <h4 class="mt-2 text-title-sm font-bold text-gray-800 dark:text-white/90">
+            {{-- Ganti angka statis dengan variabel dari controller --}}
+            {{ number_format($usersThisYear) }}
+        </h4>
+    </div>
+<span
+    class="flex items-center gap-1 rounded-full bg-success-50 py-0.5 pl-2 pr-2.5 text-sm font-medium text-success-600 dark:bg-success-500/15 dark:text-success-500">
+    <svg class="fill-current" width="12" height="12" viewBox="0 0 12 12" fill="none"
+        xmlns="http://www.w3.org/2000/svg">
+        <path fill-rule="evenodd" clip-rule="evenodd"
+            d="M5.56462 1.62393C5.70193 1.47072 5.90135 1.37432 6.12329 1.37432C6.1236 1.37432 6.12391 1.37432 6.12422 1.37432C6.31631 1.37415 6.50845 1.44731 6.65505 1.59381L9.65514 4.5918C9.94814 4.88459 9.94831 5.35947 9.65552 5.65246C9.36273 5.94546 8.88785 5.94562 8.59486 5.65283L6.87329 3.93247L6.87329 10.125C6.87329 10.5392 6.53751 10.875 6.12329 10.875C5.70908 10.875 5.37329 10.5392 5.37329 10.125L5.37329 3.93578L3.65516 5.65282C3.36218 5.94562 2.8873 5.94547 2.5945 5.65248C2.3017 5.35949 2.30185 4.88462 2.59484 4.59182L5.56462 1.62393Z"
+            fill="" />
+    </svg>
 
-                    <span
-                      class="flex items-center gap-1 rounded-full bg-success-50 py-0.5 pl-2 pr-2.5 text-sm font-medium text-success-600 dark:bg-success-500/15 dark:text-success-500">
-                      <svg class="fill-current" width="12" height="12" viewBox="0 0 12 12" fill="none"
-                        xmlns="http://www.w3.org/2000/svg">
-                        <path fill-rule="evenodd" clip-rule="evenodd"
-                          d="M5.56462 1.62393C5.70193 1.47072 5.90135 1.37432 6.12329 1.37432C6.1236 1.37432 6.12391 1.37432 6.12422 1.37432C6.31631 1.37415 6.50845 1.44731 6.65505 1.59381L9.65514 4.5918C9.94814 4.88459 9.94831 5.35947 9.65552 5.65246C9.36273 5.94546 8.88785 5.94562 8.59486 5.65283L6.87329 3.93247L6.87329 10.125C6.87329 10.5392 6.53751 10.875 6.12329 10.875C5.70908 10.875 5.37329 10.5392 5.37329 10.125L5.37329 3.93578L3.65516 5.65282C3.36218 5.94562 2.8873 5.94547 2.5945 5.65248C2.3017 5.35949 2.30185 4.88462 2.59484 4.59182L5.56462 1.62393Z"
-                          fill="" />
-                      </svg>
+    {{ number_format($userPercentage, 2) }}%
+</span>
+</div>
 
-                      11.01%
-                    </span>
-                  </div>
                 </div>
                 <!-- Metric Item End -->
 
@@ -85,7 +86,7 @@
                 class="overflow-hidden rounded-2xl border border-gray-200 bg-white px-5 pt-5 dark:border-gray-800 dark:bg-white/[0.03] sm:px-6 sm:pt-6">
                 <div class="flex items-center justify-between">
                   <h3 class="text-lg font-semibold text-gray-800 dark:text-white/90">
-                    Monthly Sales
+                    Grafik Pendaftar Tiap Bulan
                   </h3>
 
                   <div x-data="{openDropDown: false}" class="relative h-fit">
@@ -113,8 +114,13 @@
                 </div>
 
                 <div class="max-w-full overflow-x-auto custom-scrollbar">
-                  <div class="-ml-5 min-w-[650px] pl-2 xl:min-w-full">
-                    <div id="chartOne" class="-ml-5 h-full min-w-[650px] pl-2 xl:min-w-full"></div>
+                  <div class="ml-5 min-w-[650px] pl-2 xl:min-w-full">
+                     <h3 class="text-lg font-semibold mb-4 ml-5">
+       Mahasiswa Baru ({{ implode(', ', $availableYears) }})
+    </h3>
+    <div id="chartAllYears"
+      data-chart='@json($chartData)'>
+    </div>
                   </div>
                 </div>
               </div>
@@ -127,10 +133,10 @@
                   <div class="flex justify-between">
                     <div>
                       <h3 class="text-lg font-semibold text-gray-800 dark:text-white/90">
-                        Monthly Target
+                        Target Pendaftar
                       </h3>
                       <p class="mt-1 text-theme-sm text-gray-500 dark:text-gray-400">
-                        Target you’ve set for each month
+                        Target daftar akun, hingga validasi data.
                       </p>
                     </div>
                     <div x-data="{openDropDown: false}" class="relative h-fit">
@@ -157,19 +163,16 @@
                     </div>
                   </div>
                   <div class="relative max-h-[195px]">
-                    <div id="chartTwo" class="h-full"></div>
+                    <div id="chartTwoo" data-percentage="{{ round($userPercentage, 2) }}" class="h-full"></div>
                     <span
-                      class="absolute left-1/2 top-[85%] -translate-x-1/2 -translate-y-[85%] rounded-full bg-success-50 px-3 py-1 text-xs font-medium text-success-600 dark:bg-success-500/15 dark:text-success-500">+10%</span>
+                      class="absolute left-1/2 top-[85%] -translate-x-1/2 -translate-y-[85%] rounded-full bg-success-50 px-3 py-1 text-xs font-medium text-success-600 dark:bg-success-500/15 dark:text-success-500">+{{ number_format($userPercentage, 2) }}%</span>
                   </div>
-                  <p class="mx-auto mt-1.5 w-full max-w-[380px] text-center text-sm text-gray-500 sm:text-base">
-                    You earn $3287 today, it's higher than last month. Keep up your good work!
-                  </p>
                 </div>
 
                 <div class="flex items-center justify-center gap-5 px-6 py-3.5 sm:gap-8 sm:py-5">
                   <div>
                     <p class="mb-1 text-center text-theme-xs text-gray-500 dark:text-gray-400 sm:text-sm">
-                      Target
+                      Pendaftar
                     </p>
                     <p
                       class="flex items-center justify-center gap-1 text-base font-semibold text-gray-800 dark:text-white/90 sm:text-lg">
@@ -186,7 +189,7 @@
 
                   <div>
                     <p class="mb-1 text-center text-theme-xs text-gray-500 dark:text-gray-400 sm:text-sm">
-                      Revenue
+                      Validasi Data
                     </p>
                     <p
                       class="flex items-center justify-center gap-1 text-base font-semibold text-gray-800 dark:text-white/90 sm:text-lg">
@@ -203,7 +206,7 @@
 
                   <div>
                     <p class="mb-1 text-center text-theme-xs text-gray-500 dark:text-gray-400 sm:text-sm">
-                      Today
+                      Presentase
                     </p>
                     <p
                       class="flex items-center justify-center gap-1 text-base font-semibold text-gray-800 dark:text-white/90 sm:text-lg">
@@ -227,50 +230,29 @@
                 <div class="flex flex-col gap-5 mb-6 sm:flex-row sm:justify-between">
                   <div class="w-full">
                     <h3 class="text-lg font-semibold text-gray-800 dark:text-white/90">
-                      Statistics
+                      Satistik
                     </h3>
                     <p class="mt-1 text-gray-500 text-theme-sm dark:text-gray-400">
-                      Target you’ve set for each month
+                      Satistik pendaftar 2 tahun terakhir
                     </p>
                   </div>
 
-                  <div class="flex items-start w-full gap-3 sm:justify-end">
-                    <div x-data="{selected: 'overview'}"
-                      class="inline-flex w-fit items-center gap-0.5 rounded-lg bg-gray-100 p-0.5 dark:bg-gray-900">
-                      <button @click="selected = 'overview'"
-                        :class="selected === 'overview' ? 'shadow-theme-xs text-gray-900 dark:text-white bg-white dark:bg-gray-800' : 'text-gray-500 dark:text-gray-400'"
-                        class="px-3 py-2 font-medium rounded-md text-theme-sm hover:text-gray-900 dark:hover:text-white">
-                        Overview
-                      </button>
-                      <button @click="selected = 'sales'"
-                        :class="selected === 'sales' ? 'shadow-theme-xs text-gray-900 dark:text-white bg-white dark:bg-gray-800' : 'text-gray-500 dark:text-gray-400'"
-                        class="px-3 py-2 font-medium rounded-md text-theme-sm hover:text-gray-900 dark:hover:text-white">
-                        Sales
-                      </button>
-                      <button @click="selected = 'revenue'"
-                        :class="selected === 'revenue' ? 'shadow-theme-xs text-gray-900 dark:text-white bg-white dark:bg-gray-800' : 'text-gray-500 dark:text-gray-400'"
-                        class="px-3 py-2 font-medium rounded-md text-theme-sm hover:text-gray-900 dark:hover:text-white">
-                        Revenue
-                      </button>
-                    </div>
-
-                    <div class="relative w-fit">
-                      <input
-                        class="datepicker h-10 w-full max-w-11 rounded-lg border border-gray-200 bg-white py-2.5 pl-[34px] pr-4 text-theme-sm font-medium text-gray-700 shadow-theme-xs focus:outline-hidden focus:ring-0 focus-visible:outline-hidden dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 xl:max-w-fit xl:pl-11"
-                        placeholder="Select dates" data-class="flatpickr-right" readonly="readonly" />
-                      <div class="absolute inset-0 right-auto flex items-center pointer-events-none left-4">
-                        <svg class="fill-gray-700 dark:fill-gray-400" width="20" height="20" viewBox="0 0 20 20"
-                          fill="none" xmlns="http://www.w3.org/2000/svg">
-                          <path fill-rule="evenodd" clip-rule="evenodd"
-                            d="M6.66683 1.54199C7.08104 1.54199 7.41683 1.87778 7.41683 2.29199V3.00033H12.5835V2.29199C12.5835 1.87778 12.9193 1.54199 13.3335 1.54199C13.7477 1.54199 14.0835 1.87778 14.0835 2.29199V3.00033L15.4168 3.00033C16.5214 3.00033 17.4168 3.89576 17.4168 5.00033V7.50033V15.8337C17.4168 16.9382 16.5214 17.8337 15.4168 17.8337H4.5835C3.47893 17.8337 2.5835 16.9382 2.5835 15.8337V7.50033V5.00033C2.5835 3.89576 3.47893 3.00033 4.5835 3.00033L5.91683 3.00033V2.29199C5.91683 1.87778 6.25262 1.54199 6.66683 1.54199ZM6.66683 4.50033H4.5835C4.30735 4.50033 4.0835 4.72418 4.0835 5.00033V6.75033H15.9168V5.00033C15.9168 4.72418 15.693 4.50033 15.4168 4.50033H13.3335H6.66683ZM15.9168 8.25033H4.0835V15.8337C4.0835 16.1098 4.30735 16.3337 4.5835 16.3337H15.4168C15.693 16.3337 15.9168 16.1098 15.9168 15.8337V8.25033Z"
-                            fill="" />
-                        </svg>
-                      </div>
-                    </div>
-                  </div>
                 </div>
                 <div class="max-w-full overflow-x-auto custom-scrollbar">
-                  <div id="chartThree" class="-ml-4 min-w-[700px] pl-2"></div>
+<div class="flex justify-between items-center mb-3">
+
+  <button id="refreshChartBtn"
+    class="bg-blue-500 text-black text-lg px-3 py-1.5 rounded-md hover:bg-blue-600 transition">
+    🔄 Refresh
+  </button>
+</div>
+
+<div
+  id="chartThreee"
+  data-chart='{!! json_encode($chartData) !!}'
+  data-current-year="{{ $currentYear }}">
+</div>
+
                 </div>
               </div>
               <!-- ====== Chart Three End -->
@@ -496,177 +478,7 @@
                           </div>
                         </td>
                       </tr>
-                      <!-- table item -->
-                      <tr>
-                        <td class="py-3">
-                          <div class="flex items-center">
-                            <div class="flex items-center gap-3">
-                              <div class="h-[50px] w-[50px] overflow-hidden rounded-md">
-                                <img src="src/images/product/product-02.jpg" alt="Product" />
-                              </div>
-                              <div>
-                                <p class="font-medium text-gray-800 text-theme-sm dark:text-white/90">
-                                  Apple Watch Ultra
-                                </p>
-                                <span class="text-gray-500 text-theme-xs dark:text-gray-400">
-                                  1 Variants
-                                </span>
-                              </div>
-                            </div>
-                          </div>
-                        </td>
-                        <td class="py-3">
-                          <div class="flex items-center">
-                            <p class="text-gray-500 text-theme-sm dark:text-gray-400">
-                              Watch
-                            </p>
-                          </div>
-                        </td>
-                        <td class="py-3">
-                          <div class="flex items-center">
-                            <p class="text-gray-500 text-theme-sm dark:text-gray-400">
-                              $879.00
-                            </p>
-                          </div>
-                        </td>
-                        <td class="py-3">
-                          <div class="flex items-center">
-                            <p
-                              class="rounded-full bg-warning-50 px-2 py-0.5 text-theme-xs font-medium text-warning-600 dark:bg-warning-500/15 dark:text-orange-400">
-                              Pending
-                            </p>
-                          </div>
-                        </td>
-                      </tr>
-
-                      <!-- table item -->
-                      <tr>
-                        <td class="py-3">
-                          <div class="flex items-center">
-                            <div class="flex items-center gap-3">
-                              <div class="h-[50px] w-[50px] overflow-hidden rounded-md">
-                                <img src="src/images/product/product-03.jpg" alt="Product" />
-                              </div>
-                              <div>
-                                <p class="font-medium text-gray-800 text-theme-sm dark:text-white/90">
-                                  iPhone 15 Pro Max
-                                </p>
-                                <span class="text-gray-500 text-theme-xs dark:text-gray-400">
-                                  2 Variants
-                                </span>
-                              </div>
-                            </div>
-                          </div>
-                        </td>
-                        <td class="py-3">
-                          <div class="flex items-center">
-                            <p class="text-gray-500 text-theme-sm dark:text-gray-400">
-                              SmartPhone
-                            </p>
-                          </div>
-                        </td>
-                        <td class="py-3">
-                          <div class="flex items-center">
-                            <p class="text-gray-500 text-theme-sm dark:text-gray-400">
-                              $1869.00
-                            </p>
-                          </div>
-                        </td>
-                        <td class="py-3">
-                          <div class="flex items-center">
-                            <p
-                              class="rounded-full bg-success-50 px-2 py-0.5 text-theme-xs font-medium text-success-600 dark:bg-success-500/15 dark:text-success-500">
-                              Delivered
-                            </p>
-                          </div>
-                        </td>
-                      </tr>
-
-                      <!-- table item -->
-                      <tr>
-                        <td class="py-3">
-                          <div class="flex items-center">
-                            <div class="flex items-center gap-3">
-                              <div class="h-[50px] w-[50px] overflow-hidden rounded-md">
-                                <img src="src/images/product/product-04.jpg" alt="Product" />
-                              </div>
-                              <div>
-                                <p class="font-medium text-gray-800 text-theme-sm dark:text-white/90">
-                                  iPad Pro 3rd Gen
-                                </p>
-                                <span class="text-gray-500 text-theme-xs dark:text-gray-400">
-                                  2 Variants
-                                </span>
-                              </div>
-                            </div>
-                          </div>
-                        </td>
-                        <td class="py-3">
-                          <div class="flex items-center">
-                            <p class="text-gray-500 text-theme-sm dark:text-gray-400">
-                              Electronics
-                            </p>
-                          </div>
-                        </td>
-                        <td class="py-3">
-                          <div class="flex items-center">
-                            <p class="text-gray-500 text-theme-sm dark:text-gray-400">
-                              $1699.00
-                            </p>
-                          </div>
-                        </td>
-                        <td class="py-3">
-                          <div class="flex items-center">
-                            <p
-                              class="rounded-full bg-error-50 px-2 py-0.5 text-theme-xs font-medium text-error-600 dark:bg-error-500/15 dark:text-error-500">
-                              Canceled
-                            </p>
-                          </div>
-                        </td>
-                      </tr>
-
-                      <!-- table item -->
-                      <tr>
-                        <td class="py-3">
-                          <div class="flex items-center">
-                            <div class="flex items-center gap-3">
-                              <div class="h-[50px] w-[50px] overflow-hidden rounded-md">
-                                <img src="src/images/product/product-05.jpg" alt="Product" />
-                              </div>
-                              <div>
-                                <p class="font-medium text-gray-800 text-theme-sm dark:text-white/90">
-                                  Airpods Pro 2nd Gen
-                                </p>
-                                <span class="text-gray-500 text-theme-xs dark:text-gray-400">
-                                  1 Variants
-                                </span>
-                              </div>
-                            </div>
-                          </div>
-                        </td>
-                        <td class="py-3">
-                          <div class="flex items-center">
-                            <p class="text-gray-500 text-theme-sm dark:text-gray-400">
-                              Accessories
-                            </p>
-                          </div>
-                        </td>
-                        <td class="py-3">
-                          <div class="flex items-center">
-                            <p class="text-gray-500 text-theme-sm dark:text-gray-400">
-                              $240.00
-                            </p>
-                          </div>
-                        </td>
-                        <td class="py-3">
-                          <div class="flex items-center">
-                            <p
-                              class="rounded-full bg-success-50 px-2 py-0.5 text-theme-xs font-medium text-success-700 dark:bg-success-500/15 dark:text-success-500">
-                              Delivered
-                            </p>
-                          </div>
-                        </td>
-                      </tr>
+                     
                       <!-- table body end -->
                     </tbody>
                   </table>
@@ -677,4 +489,277 @@
           </div>
     
     @endsection
+ <script src="https://cdn.jsdelivr.net/npm/apexcharts@3.44.0/dist/apexcharts.min.js"></script>
+ 
+<script>
+    // Menjalankan script setelah seluruh halaman HTML selesai dimuat
+    document.addEventListener('DOMContentLoaded', function() {
+        
+        // 2. Cek apakah library ApexCharts berhasil dimuat
+        if (typeof ApexCharts === 'undefined') {
+            console.error('ApexCharts library failed to load. Please check the CDN link.');
+            return;
+        }
+
+        const chartElement = document.querySelector("#chartTwoo");
+
+        if (chartElement) {
+            const percentage = parseFloat(chartElement.dataset.percentage) || 0;
+
+            const chartTwoOptions = {
+                series: [percentage],
+                colors: ["#465FFF"],
+                chart: {
+                    fontFamily: "Outfit, sans-serif",
+                    type: "radialBar",
+                    height: 330,
+                    sparkline: {
+                        enabled: true
+                    }
+                },
+                plotOptions: {
+                    radialBar: {
+                        startAngle: -90,
+                        endAngle: 90,
+                        hollow: {
+                            size: "80%"
+                        },
+                        track: {
+                            background: "#E4E7EC",
+                            strokeWidth: "100%",
+                            margin: 5
+                        },
+                        dataLabels: {
+                            name: {
+                                show: false
+                            },
+                            value: {
+                                fontSize: "36px",
+                                fontWeight: "600",
+                                offsetY: -50,
+                                color: "#1D2939",
+                                formatter: function (val) {
+                                    return parseFloat(val).toFixed(2) + "%";
+                                }
+                            }
+                        }
+                    }
+                },
+                fill: {
+                    type: "solid",
+                    colors: ["#465FFF"]
+                },
+                stroke: {
+                    lineCap: "round"
+                },
+                labels: ["Progress"]
+            };
+
+            const chart = new ApexCharts(chartElement, chartTwoOptions);
+            chart.render();
+        }
+const chartEl = document.querySelector("#chartAllYears");
+
+if (chartEl) {
+    const chartData = JSON.parse(chartEl.dataset.chart || "[]");
+
+    const series = chartData.map(item => ({
+        name: item.year.toString(),
+        data: item.data
+    }));
+
+    const options = {
+        series: series,
+        colors: ["#465FFF", "#A0AEC0", "#34D399", "#FBBF24", "#F87171", "#6366F1"],
+        chart: {
+            type: "bar",
+            height: 200,
+            toolbar: { show: false },
+            fontFamily: "Outfit, sans-serif"
+        },
+        plotOptions: {
+            bar: {
+                horizontal: false,
+                columnWidth: "40%",
+                borderRadius: 5,
+                borderRadiusApplication: "end"
+            }
+        },
+        dataLabels: { enabled: false },
+        stroke: { show: true, width: 3, colors: ["transparent"] },
+        xaxis: {
+            categories: ["Jan", "Feb", "Mar", "Apr", "Mei", "Jun", "Jul", "Agu", "Sep", "Okt", "Nov", "Des"],
+            axisBorder: { show: false },
+            axisTicks: { show: false }
+        },
+        legend: {
+            show: true,
+            position: "top",
+            horizontalAlign: "center",
+            fontFamily: "Outfit",
+            markers: { radius: 99 }
+        },
+        yaxis: {
+            title: { text: "Jumlah Pendaftar" }
+        },
+        grid: {
+            yaxis: { lines: { show: true } }
+        },
+        fill: { opacity: 1 },
+        tooltip: {
+            y: {
+                formatter: val => `${val} pendaftar`
+            }
+        }
+    };
+
+    const chart = new ApexCharts(chartEl, options);
+    chart.render();
+}
+
+  const el = document.getElementById('chartThreee');
+  if (!el) return;
+
+  const chartDataAttr = el.dataset.chart;
+  const currentYear = el.dataset.currentYear;
+  const allYears = JSON.parse(chartDataAttr);
+
+  const currentYearData = allYears.find(d => d.year == currentYear)?.data || new Array(12).fill(0);
+  const previousYear = currentYear - 1;
+  const previousYearData = allYears.find(d => d.year == previousYear)?.data || new Array(12).fill(0);
+
+  const chartThreeOptions = {
+    series: [
+      { name: `Pendaftar ${currentYear}`, data: currentYearData },
+      { name: `Pendaftar ${previousYear}`, data: previousYearData }
+    ],
+    chart: {
+      type: "area",
+      height: "100%", // ✅ Responsif
+      width: "100%",  // ✅ Menyesuaikan container
+      toolbar: { show: false },
+      fontFamily: "Outfit, sans-serif",
+      animations: { enabled: true },
+    },
+    colors: ["#465FFF", "#9CB9FF"],
+    legend: {
+      show: true,
+      position: "top",
+      horizontalAlign: "center"
+    },
+    fill: {
+      gradient: {
+        enabled: true,
+        opacityFrom: 0.55,
+        opacityTo: 0
+      }
+    },
+    stroke: {
+      curve: "straight",
+      width: 2
+    },
+    grid: {
+      borderColor: "#f1f1f1",
+      xaxis: { lines: { show: false } },
+      yaxis: { lines: { show: true } }
+    },
+    dataLabels: { enabled: false },
+    xaxis: {
+      categories: ["Jan", "Feb", "Mar", "Apr", "Mei", "Jun", "Jul", "Agu", "Sep", "Okt", "Nov", "Des"],
+      axisBorder: { show: false },
+      axisTicks: { show: false },
+      labels: {
+        style: { fontSize: "12px" }
+      }
+    },
+    yaxis: {
+      title: {
+        text: "Jumlah Pendaftar",
+        style: { fontSize: "12px" }
+      }
+    },
+    tooltip: {
+      theme: "light",
+      y: { formatter: (val) => `${val} pendaftar` }
+    },
+    responsive: [
+      {
+        breakpoint: 768,
+        options: {
+          chart: { height: 250 },
+          legend: { position: "bottom" }
+        }
+      },
+      {
+        breakpoint: 480,
+        options: {
+          chart: { height: 200 },
+          legend: { position: "bottom", fontSize: "10px" },
+          xaxis: { labels: { show: false } }
+        }
+      }
+    ]
+  };
+
+  const chart = new ApexCharts(el, chartThreeOptions);
+  chart.render();
+
+  // ✅ Re-render chart saat window di-resize
+  window.addEventListener("resize", () => {
+    chart.render();
+  });
+
+  // ✅ Tombol Refresh Chart
+  const refreshBtn = document.getElementById("refreshChartBtn");
+  if (refreshBtn) {
+    refreshBtn.addEventListener("click", async () => {
+      refreshBtn.disabled = true;
+      refreshBtn.textContent = "⏳ Memuat...";
+
+      try {
+        // Ambil data terbaru dari endpoint Laravel (misalnya route: /dashboard/chart-data)
+        const response = await fetch("/dashboard/chart-data");
+        const result = await response.json();
+
+        const currentYear = result.currentYear;
+        const allYears = result.chartData;
+        const currentYearData = allYears.find(d => d.year == currentYear)?.data || new Array(12).fill(0);
+        const previousYear = currentYear - 1;
+        const previousYearData = allYears.find(d => d.year == previousYear)?.data || new Array(12).fill(0);
+
+        // Update chart data tanpa reload
+        chart.updateSeries([
+          { name: `Pendaftar ${currentYear}`, data: currentYearData },
+          { name: `Pendaftar ${previousYear}`, data: previousYearData }
+        ]);
+
+        refreshBtn.textContent = "✅ Diperbarui";
+        setTimeout(() => {
+          refreshBtn.textContent = "🔄 Refresh";
+          refreshBtn.disabled = false;
+        }, 1500);
+      } catch (error) {
+        console.error("Gagal memuat data chart:", error);
+        refreshBtn.textContent = "❌ Gagal";
+        setTimeout(() => {
+          refreshBtn.textContent = "🔄 Refresh";
+          refreshBtn.disabled = false;
+        }, 1500);
+      }
+    });
+  }
+    });
+</script>
     <script src="{{ asset('assets/js/bundle.js') }}"></script>
+<style>
+#chartThreee {
+  width: 100%;
+  min-height: 300px;
+  max-width: 100%;
+}
+@media (max-width: 768px) {
+  #chartThreee {
+    min-height: 250px;
+  }
+}
+</style>
